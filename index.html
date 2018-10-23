@@ -1,0 +1,89 @@
+<!doctype html>
+
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>Mlocate Search GUI</title>
+    <style>
+      .matched {
+        color: #990000;
+        font-weight: bold;
+      }
+      .title {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Mlocate Search GUI</h2>
+    <input type="text" id="search-box" value="" size="50" />
+    <input type="button" id="search-button" value="Search" />
+    <div id="results-div" style="border: 1px solid grey; margin-top: 10px; padding: 10px;"></div>
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script>
+      //Cool Interactive MLocate Search
+      //Mike Stine, 2017
+
+      //Global Variables
+      var $search_box;
+      var $search_button;
+      var $results_div;
+      var timeoutID=null;
+      
+      var busy=false;
+      // sends ajax request to search.php with query string
+      // returns result string and loads into result-div     
+      function go_search(){
+        // if there is a parallel request to search, it delays the request by 500
+        // and only one delay is allowed, the latest, the rest are tossed
+        if(busy){
+          if(timeoutID){
+            window.clearTimeout(timeoutID);
+          }
+          timeoutID=setTimeout(go_search, 500);
+          return;
+        }
+      
+        busy=true; //reserve busy flag 
+        $search_box.css("background-color", "#ffffe5"); //searchbox background yellow	
+        
+        //search away
+        $.ajax({
+          url: 'search.php',
+          data: {'query': $search_box.val()},
+          type: 'post',
+          success: function (result){
+            $results_div.html(result);  //fill results
+            $search_box.css("background-color", "#ffffff"); //textbox background white
+            busy=false; //release busy flag	
+          }
+        }); //ajax end
+
+      } // function go_search end
+
+      // jquery is loaded
+      $(document).ready(function(){
+
+        // init jquery variables
+        $search_box = $('#search-box');
+        $search_button = $('#search-button');
+        $results_div = $('#results-div');
+        
+        // detect search button click and search
+        $search_button.click(function(){
+          go_search();
+        }); 
+
+        // detect keypress in search box
+        $search_box.keyup(function(e){
+          if(e.which == 13 ){
+            go_search();  //search when submit button is pressed
+          }else if($search_box.val().length > 3){
+             go_search(); //search on all keypresses when query is greater than 3
+          }
+        });
+
+      }); // on document ready end
+    </script>
+  </body> 
+</html>
